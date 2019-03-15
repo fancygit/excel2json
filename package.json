@@ -1,0 +1,22 @@
+{
+  "name": "excel2json",
+  "version": "1.0.0",
+  "description": "excel => json",
+  "main": "excel2json.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fancygit/excel2json.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fancygit/excel2json/issues"
+  },
+  "homepage": "https://github.com/fancygit/excel2json#readme",
+  "dependencies": {
+    "node-xlsx": "^0.12.1"
+  }
+}
