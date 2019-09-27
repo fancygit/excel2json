@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/fancygit/excel2json#readme",
   "dependencies": {
+    "mkdirp": "^0.5.1",
     "node-xlsx": "^0.12.1"
   }
 }

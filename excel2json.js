@@ -16,7 +16,6 @@ if( !fs.existsSync(outDir)){
 	fs.mkdirSync(outDir);
 }
 
-
 //	遍历 src目录
 fs.readdir(srcDir, function(err, files) {
 	if(err){
@@ -26,14 +25,31 @@ fs.readdir(srcDir, function(err, files) {
 	files.forEach(function(fileName) {
 		//	只解析xlsx文件,忽略其它
 		console.log(fileName);
+		// if( fileName.startsWith("装备")){
+		// 	return;
+		// }
 		if( !fileName.startsWith("~") && fileName.endsWith("xlsx")){
 			parseByFilePath(srcDir+fileName);
 		}
 	});
 	processJson();
-	processJackPot();
-	processCrusadeJackPot();
-	processPVE();
+	try{
+		processJackPot();
+	}
+	catch(e){
+		console.log(e);
+	}
+	let translateList1 = ['crusade_jackpot'];
+	let translateList2 = ['turntable_num'];
+	translateList1.forEach(function (name) {
+		translateCommonJackPot(name);
+	});
+	translateList2.forEach(function (name) {
+		translateCommonJackPot2(name);
+	});
+
+	// processTurnTableJackpot("turntable_jackpot");
+	// processPVE();
 	processEquipEffect();
 	//	处理userInfoAttr
 	if( backend ){
@@ -148,6 +164,7 @@ function parseData(data, sheetName){
 			}
 		}
 		else{
+			let uselessField =[];
 			for(let j in title){
 				let column = row[j];
 				if( typeInfo[j] === 'ignore'){
@@ -171,6 +188,10 @@ function parseData(data, sheetName){
 					temp[header[j]] = column;
 				}
 			}
+
+			uselessField.forEach(function (field) {
+			    delete temp[field];
+			});
 
 			//	数组为空的,则删除该属性
 			for(let ti in temp){
@@ -258,7 +279,11 @@ function parseData(data, sheetName){
 				//	s1与m1均挂在根下
 				if( layerLevel === "s1" ){
 					let tmp_key = header[l];
-					layer0[tmp_key] = temp[header[l]];
+					if( typeInfo[l].startsWith("join_")){
+						tmp_key = typeInfo[l].slice(5);
+					}
+					// layer0[tmp_key] = temp[header[l]];
+					layer0[tmp_key] = temp[tmp_key];
 				}
 
 				//	m2下可以挂m3和s3
@@ -354,8 +379,28 @@ function processDeduct(originDatas){
 	}
 }
 
-function processCrusadeJackPot(){
-	let jackPot = require(outDir+"crusade_jackpot");
+function translateCommonJackPot2(fileName){
+    let jackPot = require(outDir+fileName);
+    let result = {};
+    for(let zy in jackPot){
+        result[zy] = result[zy] || [];
+        let zyConfig = jackPot[zy];
+		let i=1;
+		while(true){
+			let id = zyConfig['id'+i];
+			let probability  = zyConfig['probability'+i];
+			if( !id || !probability){
+				break;
+			}
+			result[zy].push({id:id, probability:probability});
+			i++;
+		}
+    }
+    fs.writeFileSync(outDir+fileName+".json", JSON.stringify(result, null, 4));
+}
+
+function translateCommonJackPot(fileName){
+	let jackPot = require(outDir+fileName);
 	let result = {};
 	for(let zy in jackPot){
 		result[zy] = result[zy] || {};
@@ -376,7 +421,7 @@ function processCrusadeJackPot(){
 			//jackPot[zy][level]=config;
 		}
 	}
-	fs.writeFileSync(outDir+"crusade_jackpot.json", JSON.stringify(result, null, 4));
+	fs.writeFileSync(outDir+fileName+".json", JSON.stringify(result, null, 4));
 }
 
 function processJackPot(){
@@ -393,6 +438,8 @@ function processJackPot(){
 			while(true){
 				let dropId = weightInfo['id'+i];
 				if( !dropId ){
+					// console.log("缺少dropId", id);
+                    //	为了退出循环
 					break;
 				}
 				let config = {};
@@ -412,20 +459,20 @@ function processJackPot(){
 				tmpWeightInfo.push(config);
 				i++;
 			}
+			//console.log(tmpWeightInfo);
 			processedJackPot[id] = tmpWeightInfo;
-
 		}
-
-	}
+	};
 
 	let potNames = ["jackpot.json", "recruit_jackpot.json"];
 	for(let i in potNames){
 		let potName = potNames[i];
 		subProc(potName);
 	}
+//console.log(processedJackPot);
 
 	fs.writeFileSync(outDir+"jackpot.json", JSON.stringify(processedJackPot, null, 4));
-	fs.unlinkSync(outDir+'recruit_jackpot.json');
+	//fs.unlinkSync(outDir+'recruit_jackpot.json');
 }
 
 function processJson(){
@@ -583,7 +630,8 @@ function process3K(){
 	fs.unlinkSync(outDir+'3k_channels.json');
 
 	//	数据互通
-	let interflowConfig = require(outDir+"3k_unionChannels.json"); let result = {};
+	let interflowConfig = require(outDir+"3k_unionChannels.json");
+	// let result = {};
 	for(let i in interflowConfig){
 		let interflowConfigItem = interflowConfig[i];
 		let android = interflowConfigItem['android'];
