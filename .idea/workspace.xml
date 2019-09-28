@@ -2,13 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="32346607-3889-40f4-ba2f-d01b15f9bd67" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/export2json.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/process.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config/fileModified.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/publish.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config.js" beforeDir="false" afterPath="$PROJECT_DIR$/config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/excel2json.js" beforeDir="false" afterPath="$PROJECT_DIR$/excel2json.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/export2json.js" beforeDir="false" afterPath="$PROJECT_DIR$/export2json.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/process.js" beforeDir="false" afterPath="$PROJECT_DIR$/process.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -45,10 +46,25 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Node.js.export2json.js">
+    <configuration name="copy" type="NodeJSConfigurationType" path-to-js-file="publish.js" working-dir="$PROJECT_DIR$">
+      <method v="2" />
+    </configuration>
     <configuration name="export2json.js" type="NodeJSConfigurationType" nameIsGenerated="true" path-to-js-file="export2json.js" working-dir="$PROJECT_DIR$">
       <method v="2" />
     </configuration>
+    <configuration name="genFileList" type="NodeJSConfigurationType" path-to-js-file="genFileList.js" working-dir="$PROJECT_DIR$">
+      <method v="2" />
+    </configuration>
+    <configuration name="process" type="NodeJSConfigurationType" path-to-js-file="process.js" working-dir="$PROJECT_DIR$">
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Node.js.export2json.js" />
+      <item itemvalue="Node.js.process" />
+      <item itemvalue="Node.js.genFileList" />
+      <item itemvalue="Node.js.copy" />
+    </list>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -74,7 +90,12 @@
       <workItem from="1558340613161" duration="4099000" />
       <workItem from="1558934492399" duration="425000" />
       <workItem from="1560492907247" duration="719000" />
-      <workItem from="1569573139499" duration="7681000" />
+      <workItem from="1569573139499" duration="14774000" />
+      <workItem from="1569600363816" duration="5000" />
+      <workItem from="1569600371460" duration="2000" />
+      <workItem from="1569600388109" duration="59000" />
+      <workItem from="1569600455883" duration="209000" />
+      <workItem from="1569634880526" duration="999000" />
     </task>
     <servers />
   </component>
@@ -86,10 +107,24 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/export2json.js</url>
+          <line>47</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

@@ -1,61 +1,65 @@
+let fs = require("fs");
+let mkdirp = require("mkdirp");
+let config = require('./config');
+
+let pubDir = config.pubDir;
+let genDir = pubDir + "genedJson/";
+
+if( !fs.existsSync(genDir)){
+    mkdirp.sync(genDir);
+}
+
 /**
  * 处理多个process
  */
 function processJackPot(){
-
-    let processedJackPot = {};
-
-    let subProc = function(potName){
-        let jackPot = require(outDir+potName);
+    let result = {};
+    let subProc = function(jsonFileName){
+        let jackPot = require(pubDir+jsonFileName);
 
         for(let id in jackPot){
-            let weightInfo = jackPot[id];
-            let tmpWeightInfo = [];
-            let i=1;
+            //  原始平铺的权重信息
+            let originWeightInfo = jackPot[id];
+            //  转换成结构化的权重信息
+            let usefulWeightInfo = [];
+            let sequence = 1;
             while(true){
-                let dropId = weightInfo['id'+i];
+                let dropId = originWeightInfo['id'+sequence];
                 if( !dropId ){
-                    // console.log("缺少dropId", id);
-                    //	为了退出循环
                     break;
                 }
-                let config = {};
-                let names = ['id','probability'];
-                let min = weightInfo['min'+i] || weightInfo['min'];
-                let max = weightInfo['max'+i] || weightInfo['max'];
-                for(let j in names){
-                    let name = names[j];
-                    config[name] = weightInfo[name+i];
+                let item = {};
+                let fileds = ['id','probability'];
+                let min = originWeightInfo['min'+sequence] || originWeightInfo['min'];
+                let max = originWeightInfo['max'+sequence] || originWeightInfo['max'];
+                for(let index in fileds){
+                    let field = fileds[index];
+                    item[field] = originWeightInfo[field+sequence];
                     if( min ){
-                        config['min'] = min;
+                        item['min'] = min;
                     }
                     if( max) {
-                        config['max'] = max;
+                        item['max'] = max;
                     }
                 }
-                tmpWeightInfo.push(config);
-                i++;
+                usefulWeightInfo.push(item);
+                sequence++;
             }
-            //console.log(tmpWeightInfo);
-            processedJackPot[id] = tmpWeightInfo;
+            result[id] = usefulWeightInfo;
         }
     };
 
-    let potNames = ["jackpot.json", "recruit_jackpot.json"];
-    for(let i in potNames){
-        let potName = potNames[i];
-        subProc(potName);
-    }
-//console.log(processedJackPot);
+    let filesNames = ["jackpot.json", "recruit_jackpot.json"];
+    filesNames.forEach(subProc);
 
-    fs.writeFileSync(outDir+"jackpot.json", JSON.stringify(processedJackPot, null, 4));
-    //fs.unlinkSync(outDir+'recruit_jackpot.json');
+    //  生成新文件
+    fs.writeFileSync(genDir+"jackpot.json", JSON.stringify(result, null, config.jsonSpace));
 }
 
 function processEquipEffect(){
-    let skillEffectConfig = require(outDir+"unit_skill_effect.json");
-    let equipEffectConfig = require(outDir+"equip_effect.json");
-    let equipEffectExtraConfig = require(outDir+"equip_effect_extra.json");
+    let skillEffectConfig = require(pubDir+"unit_skill_effect.json");
+    let equipEffectConfig = require(pubDir+"equip_effect.json");
+    let equipEffectExtraConfig = require(pubDir+"equip_effect_extra.json");
     for(let i in equipEffectConfig){
         let equipEffectConfigItem = equipEffectConfig[i];
         //	增幅ID
@@ -65,27 +69,18 @@ function processEquipEffect(){
         skillEffectConfig[i] = equipEffectConfigItem;
     }
 
-    fs.writeFileSync(outDir+"unit_skill_effect.json", JSON.stringify(skillEffectConfig, null, 4));
-    fs.unlinkSync(outDir+'equip_effect.json');
+    fs.writeFileSync(genDir+"unit_skill_effect.json", JSON.stringify(skillEffectConfig, null, config.jsonSpace));
+    // fs.unlinkSync(genDir+'equip_effect.json');
 }
 
 function processUserInfo(){
-    console.log('处理玩家');
-    let userInfoAttrConfig = require(outDir+"user_info_attr.json");
-    /*
-    let result = {};
-    for(let i in userInfoAttrConfig){
-        result[i.toUpperCase()] = userInfoAttrConfig[i];
-    }
-    */
-    fs.writeFileSync(outDir+"../../app/consts/userInfoAttr.json", JSON.stringify(userInfoAttrConfig, null, 4));
-    fs.unlinkSync(outDir+'user_info_attr.json');
+    let userInfoAttrConfig = require(pubDir+"user_info_attr.json");
+    fs.writeFileSync(genDir+"userInfoAttr.json", JSON.stringify(userInfoAttrConfig, null, config.jsonSpace));
 }
 
 function processUnitTalent(){
-    console.log('处理天赋');
-    let unitTalentConfig = require(outDir+"unit_talent.json");
-    let unitTalentBreakConfig = require(outDir+"unit_talent_break.json");
+    let unitTalentConfig = require(pubDir+"unit_talent.json");
+    let unitTalentBreakConfig = require(pubDir+"unit_talent_break.json");
     for(let i in unitTalentConfig){
         let unitTalentConfigItem = unitTalentConfig[i];
         for(let j in unitTalentConfigItem){
@@ -101,12 +96,12 @@ function processUnitTalent(){
             }
         }
     }
-    fs.writeFileSync(outDir+"unit_talent.json", JSON.stringify(unitTalentConfig, null, 4));
-    fs.unlinkSync(outDir+'unit_talent_break.json');
-};
+    fs.writeFileSync(genDir+"unit_talent.json", JSON.stringify(unitTalentConfig, null, config.jsonSpace));
+    // fs.unlinkSync(genDir+'unit_talent_break.json');
+}
 
 function translateCommonJackPot2(fileName){
-    let jackPot = require(outDir+fileName);
+    let jackPot = require(pubDir+fileName);
     let result = {};
     for(let zy in jackPot){
         result[zy] = result[zy] || [];
@@ -122,11 +117,11 @@ function translateCommonJackPot2(fileName){
             i++;
         }
     }
-    fs.writeFileSync(outDir+fileName+".json", JSON.stringify(result, null, 4));
+    fs.writeFileSync(genDir+fileName+".json", JSON.stringify(result, null, config.jsonSpace));
 }
 
 function translateCommonJackPot(fileName){
-    let jackPot = require(outDir+fileName);
+    let jackPot = require(pubDir+fileName);
     let result = {};
     for(let zy in jackPot){
         result[zy] = result[zy] || {};
@@ -140,14 +135,13 @@ function translateCommonJackPot(fileName){
                 if( !id || !probability){
                     break;
                 }
-//				config.push({id:id,probability:probability});
                 result[zy][level].push({id:id, probability:probability});
                 i++;
             }
-            //jackPot[zy][level]=config;
         }
     }
-    fs.writeFileSync(outDir+fileName+".json", JSON.stringify(result, null, 4));
+
+    fs.writeFileSync(genDir+fileName+".json", JSON.stringify(result, null, config.jsonSpace));
 }
 
 let process = function () {
@@ -156,20 +150,17 @@ let process = function () {
     //  特殊处理
     let translateList1 = ['crusade_jackpot'];
     let translateList2 = ['turntable_num'];
-    translateList1.forEach(function (name) {
-        translateCommonJackPot(name);
-    });
-    translateList2.forEach(function (name) {
-        translateCommonJackPot2(name);
-    });
-
+    translateList1.forEach(translateCommonJackPot);
+    translateList2.forEach(translateCommonJackPot2);
     //  合并装备特效
     processEquipEffect();
-    if( backend ){
+    if( config.backend ){
         processUserInfo();
     }
     //  合并驱动者天赋
     processUnitTalent();
 };
+
+process();
 
 module.exports.process  = process;

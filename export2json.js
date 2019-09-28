@@ -8,6 +8,7 @@ let util = require('util');
 let srcDir = config.srcDir;
 let pubDir =  config.pubDir;
 let backend = config.backend;
+let configDir = config.configDir;
 
 if( !fs.existsSync(srcDir)){
     console.log(srcDir+"不存在，请将xlsx文件放到src目录下");
@@ -19,6 +20,17 @@ if( !fs.existsSync(pubDir)){
     process.exit();
 }
 
+if( !fs.existsSync(configDir)){
+    mkdirp.sync(configDir);
+}
+
+let fileModified = configDir + "/fileModified.json";
+if( !fs.existsSync(fileModified)){
+    fs.writeFileSync(fileModified, JSON.stringify({}), null, 4);
+}
+
+let configFileModified =  require(fileModified);
+
 let exportAll = function(){
     //	遍历 src目录
     fs.readdir(srcDir, function(err, files) {
@@ -27,20 +39,24 @@ let exportAll = function(){
             process.exit();
         }
         let startTime = Date.now();
+        let exportList = [];
         files.forEach(function(fileName) {
             //	只解析xlsx文件,忽略其它
-            // console.log(fileName);
             if( !fileName.startsWith("~") && fileName.endsWith("xlsx")){
-                parseByFilePath(srcDir+fileName);
+                let stat = fs.statSync(srcDir+fileName);
+                let mtimeMs = stat.mtimeMs;
+                if(  (configFileModified[fileName] && configFileModified[fileName] < mtimeMs)  || !configFileModified[fileName] ){
+                    configFileModified[fileName] = mtimeMs;
+                    exportList.push(fileName);
+                    parseByFilePath(srcDir+fileName);
+                }
             }
         });
         let endTime = Date.now();
+        console.log("导出文件列表(修改过的):", JSON.stringify(exportList));
         console.log("完全导出总用时:", (endTime-startTime)/1000);
+        fs.writeFileSync(fileModified, JSON.stringify(configFileModified, null, 4));
     });
-};
-
-//  只导出修改过的文件
-let exportByModified = function () {
 };
 
 /*
@@ -207,7 +223,7 @@ let parseData = function(data, sheetName){
                         if( column ){
                             console.log("处理json出错", sheetName, "line:", curRowNum, "json:", column);
                         }
-                        column = {};
+                        column = undefined;
                     }
                 }
 
@@ -398,7 +414,9 @@ let processDeduct = function(originDatas){
     else{
         return originDatas;
     }
-}
+};
+
+exportAll();
 
 module.exports.exportAll = exportAll;
 module.exports.exportBySheet = exportBySheet;
