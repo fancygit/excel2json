@@ -1,21 +1,47 @@
 let fs = require("fs");
 let mkdirp = require("mkdirp");
 let config = require('./config');
+let util =  require("util");
 
-let pubDir = config.pubDir;
-let genDir = pubDir + "genedJson/";
+let originDir = config.originDir;
+let genDir = util.format('%s/%s', originDir , "genedJson");
 
-if( !fs.existsSync(genDir)){
-    mkdirp.sync(genDir);
+function getPlatformGenedDir(platform) {
+    let genPlatformDir =  util.format("%s/%s/%s", originDir, platform, "genedJson");
+    if( !fs.existsSync(genPlatformDir)){
+        mkdirp.sync(genPlatformDir);
+    }
+
+    return genPlatformDir;
+}
+
+function autoSelectFile(platform, fileName) {
+    let  filePath = util.format("%s/%s/%s", originDir, platform, fileName);
+    // console.log(filePath);
+    if( !fs.existsSync(filePath)){
+        filePath = util.format("%s/%s", originDir, fileName);
+    }
+
+    if( !fs.existsSync(filePath)){
+        console.log(util.format("[%s] 路径不存在: [%s]", platform, filePath));
+        return "";
+    }
+
+    return filePath;
 }
 
 /**
  * 处理多个process
  */
-function processJackPot(){
+function processJackPot(platform){
     let result = {};
-    let subProc = function(jsonFileName){
-        let jackPot = require(pubDir+jsonFileName);
+    let subProc = function(fileName){
+        let filePath = autoSelectFile(platform,  fileName);
+        if(  filePath == "" ){
+            return;
+        }
+
+        let jackPot = require(filePath);
 
         for(let id in jackPot){
             //  原始平铺的权重信息
@@ -52,14 +78,34 @@ function processJackPot(){
     let filesNames = ["jackpot.json", "recruit_jackpot.json"];
     filesNames.forEach(subProc);
 
+    let genPlatformDir =  getPlatformGenedDir(platform);
+
     //  生成新文件
-    fs.writeFileSync(genDir+"jackpot.json", JSON.stringify(result, null, config.jsonSpace));
+    fs.writeFileSync(util.format("%s/%s",genPlatformDir,"jackpot.json"), JSON.stringify(result, null, config.jsonSpace));
 }
 
-function processEquipEffect(){
-    let skillEffectConfig = require(pubDir+"unit_skill_effect.json");
-    let equipEffectConfig = require(pubDir+"equip_effect.json");
-    let equipEffectExtraConfig = require(pubDir+"equip_effect_extra.json");
+function processEquipEffect(platform){
+    let  fileList = ["unit_skill_effect.json", "equip_effect.json", "equip_effect_extra.json"];
+    let  filePathList = [];
+    for (let  fileName of fileList ){
+        filePathList.push(autoSelectFile(platform,  fileName));
+    }
+
+    let bOK = true;
+    filePathList.forEach(function (item) {
+        if(item  == "" ){
+            bOK = false;
+        }
+    });
+
+    if( !bOK){
+        console.log("处理equipEffect出错");
+        return;
+    }
+
+    let skillEffectConfig = require(filePathList[0]);
+    let equipEffectConfig = require(filePathList[1]);
+    let equipEffectExtraConfig = require(filePathList[2]);
     for(let i in equipEffectConfig){
         let equipEffectConfigItem = equipEffectConfig[i];
         //	增幅ID
@@ -69,18 +115,34 @@ function processEquipEffect(){
         skillEffectConfig[i] = equipEffectConfigItem;
     }
 
-    fs.writeFileSync(genDir+"unit_skill_effect.json", JSON.stringify(skillEffectConfig, null, config.jsonSpace));
+    let genPlatformDir =  getPlatformGenedDir(platform);
+    fs.writeFileSync(util.format("%s/%s", genPlatformDir,"unit_skill_effect.json"), JSON.stringify(skillEffectConfig, null, config.jsonSpace));
     // fs.unlinkSync(genDir+'equip_effect.json');
 }
 
 function processUserInfo(){
-    let userInfoAttrConfig = require(pubDir+"user_info_attr.json");
-    fs.writeFileSync(genDir+"userInfoAttr.json", JSON.stringify(userInfoAttrConfig, null, config.jsonSpace));
+    // let  filePath = util.format("%s/%s", originDir, "user_info_attr.json");
+    // let userInfoAttrConfig = require(filePath);
+    // let genPlatformDir =  getPlatformGenedDir(platform);
+    // fs.writeFileSync(util.format("%s/%s", genDir,"userInfoAttr.json"), JSON.stringify(userInfoAttrConfig, null, config.jsonSpace));
 }
 
-function processUnitTalent(){
-    let unitTalentConfig = require(pubDir+"unit_talent.json");
-    let unitTalentBreakConfig = require(pubDir+"unit_talent_break.json");
+function processUnitTalent(platform){
+    let file1 = "unit_talent.json";
+    let file2 = "unit_talent_break.json";
+    let unitTalentConfig,unitTalentBreakConfig;
+
+    let file1Path = autoSelectFile(platform,  file1);
+    let file2Path = autoSelectFile(platform,  file2);
+
+    if( file1Path ==  "" || file2Path == ""){
+        console.log("处理天赋出错，文件不存在");
+        return;
+    }
+
+    unitTalentConfig = require(file1Path);
+    unitTalentBreakConfig = require(file2Path);
+
     for(let i in unitTalentConfig){
         let unitTalentConfigItem = unitTalentConfig[i];
         for(let j in unitTalentConfigItem){
@@ -96,12 +158,19 @@ function processUnitTalent(){
             }
         }
     }
-    fs.writeFileSync(genDir+"unit_talent.json", JSON.stringify(unitTalentConfig, null, config.jsonSpace));
+
+    let genPlatformDir =  getPlatformGenedDir(platform);
+    fs.writeFileSync(util.format("%s/%s", genPlatformDir,"unit_talent.json"), JSON.stringify(unitTalentConfig, null, config.jsonSpace));
     // fs.unlinkSync(genDir+'unit_talent_break.json');
 }
 
-function translateCommonJackPot2(fileName){
-    let jackPot = require(pubDir+fileName);
+function translateCommonJackPot2(platform, fileName){
+    let filePath = autoSelectFile(platform,  fileName);
+    if(  filePath == "" ){
+        return;
+    }
+
+    let jackPot = require(filePath);
     let result = {};
     for(let zy in jackPot){
         result[zy] = result[zy] || [];
@@ -117,11 +186,18 @@ function translateCommonJackPot2(fileName){
             i++;
         }
     }
-    fs.writeFileSync(genDir+fileName+".json", JSON.stringify(result, null, config.jsonSpace));
+
+    let genPlatformDir =  getPlatformGenedDir(platform);
+    fs.writeFileSync(util.format("%s/%s", genPlatformDir,fileName), JSON.stringify(result, null, config.jsonSpace));
 }
 
-function translateCommonJackPot(fileName){
-    let jackPot = require(pubDir+fileName);
+function translateCommonJackPot(platform, fileName){
+    let filePath = autoSelectFile(platform,  fileName);
+    if(  filePath == "" ){
+        return;
+    }
+    // let filePath =  util.format("%s/%s", originDir, fileName);
+    let jackPot = require(filePath);
     let result = {};
     for(let zy in jackPot){
         result[zy] = result[zy] || {};
@@ -141,24 +217,38 @@ function translateCommonJackPot(fileName){
         }
     }
 
-    fs.writeFileSync(genDir+fileName+".json", JSON.stringify(result, null, config.jsonSpace));
+    let genPlatformDir =  getPlatformGenedDir(platform);
+    fs.writeFileSync(util.format("%s/%s", genPlatformDir,fileName), JSON.stringify(result, null, config.jsonSpace));
 }
 
 let process = function () {
-    //  合并jackpot
-    processJackPot();
-    //  特殊处理
-    let translateList1 = ['crusade_jackpot'];
-    let translateList2 = ['turntable_num'];
-    translateList1.forEach(translateCommonJackPot);
-    translateList2.forEach(translateCommonJackPot2);
-    //  合并装备特效
-    processEquipEffect();
+    //  前端不处理
     if( config.backend ){
+        //  合并jackpot
+        for(let platform of config.platforms){
+            processJackPot(platform);
+        }
         processUserInfo();
     }
+
+    let translateList1 = ['crusade_jackpot.json'];
+    let translateList2 = ['turntable_num.json'];
+    //  特殊处理
+    for(let platform  of config.platforms){
+        for(let fileName of translateList1){
+            translateCommonJackPot(platform, fileName);
+        }
+
+        for(let fileName of translateList2){
+            translateCommonJackPot2(platform, fileName);
+        }
+        processEquipEffect(platform);
+        processUnitTalent(platform);
+    }
+    // translateList1.forEach(translateCommonJackPot);
+    // translateList2.forEach(translateCommonJackPot2);
+    //  合并装备特效
     //  合并驱动者天赋
-    processUnitTalent();
 };
 
 process();

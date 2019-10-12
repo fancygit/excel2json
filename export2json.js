@@ -6,7 +6,7 @@ let config = require('./config');
 let util = require('util');
 
 let srcDir = config.srcDir;
-let pubDir =  config.pubDir;
+let originDir =  config.originDir;
 let backend = config.backend;
 let configDir = config.configDir;
 
@@ -15,8 +15,8 @@ if( !fs.existsSync(srcDir)){
     process.exit();
 }
 
-if( !fs.existsSync(pubDir)){
-    console.log(pubDir+"不存在，请先创建原始配置文件夹");
+if( !fs.existsSync(originDir)){
+    console.log(originDir+"不存在，请先创建原始配置文件夹");
     process.exit();
 }
 
@@ -113,7 +113,7 @@ let  parseByFilePath = function(name){
         }
 
         if( postFix !== "" && !fs.existsSync()){
-            mkdirp.sync(pubDir+postFix);
+            mkdirp.sync(util.format("%s/%s",originDir,postFix));
         }
 
         let fileName = "";
@@ -123,7 +123,8 @@ let  parseByFilePath = function(name){
             fileName = sheetName;
         }
 
-        fs.writeFileSync(pubDir+fileName+".json", JSON.stringify(output[sheetName], null, config.jsonSpace));
+        let outputFileName = util.format("%s/%s.json", originDir,  fileName);
+        fs.writeFileSync(outputFileName, JSON.stringify(output[sheetName], null, config.jsonSpace));
     }
 
     let endTime = Date.now();
