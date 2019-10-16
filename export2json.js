@@ -96,7 +96,7 @@ let  parseByFilePath = function(name){
         output[sheetName] = processDeduct(parseData(sheetData, sheetName));
     }
 
-    let postFixList = ["kkk_oversea", "kkk", "gaea"];
+    let postFixList = config.platforms;
     for(let sheetName in output){
         let postFix = "";
         for( let i=0; i<postFixList.length; i++){
