@@ -174,12 +174,13 @@ function start() {
 
     for(let platform of config.platforms){
         tasks.push(function (cb) {
-            copyPlatform(platform, cb);
+            copyBasic(platform, cb);
         });
 
         tasks.push(function (cb) {
-            copyBasic(platform, cb);
+            copyPlatform(platform, cb);
         });
+
 
         tasks.push(function (cb) {
             deleteNoNeed(platform, cb);
@@ -188,7 +189,7 @@ function start() {
 
     async.waterfall(tasks,function (err) {
             // let cmd = util.format("%s%s_%s",config.versionDir, versioncode, subCode);
-            let cmd = util.format("echo %s_%s > %s%s", versioncode, subCode, config.versionDir,  "pubVersion.latest");
+            let cmd = util.format("echo %s_%s > %s/%s", versioncode, subCode, config.versionDir,  "pubVersion.latest");
             exec(cmd, (error)=>{
                 if(error){
                     console.log("生成新版本ID出错");
@@ -197,7 +198,7 @@ function start() {
                 console.log("发布新版本成功", versioncode, subCode);
             });
 
-            let cmd2 = util.format("echo %s > %s%s", versionPath,  config.versionDir, "pubVersion.path");
+            let cmd2 = util.format("echo %s > %s/%s", versionPath,  config.versionDir, "pubVersion.path");
             exec(cmd2, (error)=>{
                 if(error){
                     console.log("生成新版本路径出错");
