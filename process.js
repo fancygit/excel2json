@@ -103,9 +103,12 @@ function processEquipEffect(platform){
         return;
     }
 
-    let skillEffectConfig = require(filePathList[0]);
-    let equipEffectConfig = require(filePathList[1]);
-    let equipEffectExtraConfig = require(filePathList[2]);
+    // let skillEffectConfig = require(filePathList[0]);
+    // let equipEffectConfig = require(filePathList[1]);
+    // let equipEffectExtraConfig = require(filePathList[2]);
+    let skillEffectConfig =  JSON.parse(fs.readFileSync(filePathList[0],'utf-8'));
+    let equipEffectConfig =  JSON.parse(fs.readFileSync(filePathList[1], 'utf-8'));
+    let equipEffectExtraConfig =  JSON.parse(fs.readFileSync(filePathList[2], 'utf-8'));
     for(let i in equipEffectConfig){
         let equipEffectConfigItem = equipEffectConfig[i];
         //	增幅ID
