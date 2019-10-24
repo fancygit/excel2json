@@ -41,7 +41,8 @@ function processJackPot(platform){
             return;
         }
 
-        let jackPot = require(filePath);
+        // let jackPot = require(filePath);
+        let jackPot =  JSON.parse(fs.readFileSync(filePath,'utf-8'));
 
         for(let id in jackPot){
             //  原始平铺的权重信息
@@ -143,8 +144,10 @@ function processUnitTalent(platform){
         return;
     }
 
-    unitTalentConfig = require(file1Path);
-    unitTalentBreakConfig = require(file2Path);
+    // unitTalentConfig = require(file1Path);
+    unitTalentConfig =  JSON.parse(fs.readFileSync(file1Path,'utf-8'));
+    // unitTalentBreakConfig = require(file2Path);
+    unitTalentBreakConfig =  JSON.parse(fs.readFileSync(file2Path,'utf-8'));
 
     for(let i in unitTalentConfig){
         let unitTalentConfigItem = unitTalentConfig[i];
